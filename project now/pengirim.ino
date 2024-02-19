@@ -75,15 +75,15 @@ const sRFM_pins RFM_pins = {
    or only the signal pin (for sensors 3 pins), like:
    Ultrasonic ultrasonic(13);
 */
-Ultrasonic ultrasonic(13,12);
+// Ultrasonic ultrasonic(26,25);
 MFRC522 mfrc522(SS_PIN, RST_PIN); 
 LiquidCrystal_I2C lcd(0x27,16,2);
 Servo myservo;
 int distance;
 
-// int echo = 25;
-// int trig = 26;
-// long jarak,durasi;
+int echo = 25;
+int trig = 26;
+long jarak,durasi;
 void setup() {
   #if defined (ARDUINO_B_L072Z_LRWAN1)
   SPI.setMOSI(PA7);
@@ -150,8 +150,8 @@ void setup() {
   lcd.backlight();
   lcd.setCursor(0,0);
   lcd.print("Parkir Karyawan");
-  // pinMode(echo, INPUT);
-  // pinMode(trig, OUTPUT);
+  pinMode(echo, INPUT);
+  pinMode(trig, OUTPUT);
   lcd.setCursor(0,1);
   lcd.print("Tempelkan Kartu!");
   Serial.println(F("DFRobot DFPlayer Mini Demo"));
@@ -190,19 +190,17 @@ void loop() {
   Serial.print("Message : ");
   content.toUpperCase();
 
-  // digitalWrite(trig, LOW); 
-  // delayMicroseconds(8);
-  // digitalWrite(trig, HIGH); 
-  // delayMicroseconds(8); 
-  // digitalWrite(trig, LOW); 
-  // delayMicroseconds(8);
-  // durasi= pulseIn(echo, HIGH);
-  // jarak= (durasi / 2) / 29.1;
-  // delay(5);
-  //   Serial.println(jarak + " cm");
-  //   delay(500);
+  digitalWrite(trig, LOW); 
+  delayMicroseconds(8);
+  digitalWrite(trig, HIGH); 
+  delayMicroseconds(8); 
+  digitalWrite(trig, LOW); 
+  delayMicroseconds(8);
+  durasi= pulseIn(echo, HIGH);
+  jarak= (durasi / 2) / 29.1;
+  delay(5);
   
-  if(ultrasonic.read(CM) < 5 ){
+  if(jarak <= 5 ){
     if (content.substring(1) == "53 41 03 AA") //TUKAR UID INI SESUAI RFIA TAG KALIAN
     {
       data_ku.nilai = 1;
