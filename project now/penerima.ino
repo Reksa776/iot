@@ -19,11 +19,22 @@ void cb_terima(const uint8_t *mac_addr, const uint8_t *dataDiterima, int panjang
 
   Serial.println();
 }
- 
-SoftwareSerial mySoftwareSerial(16, 17);
+
+#if (defined(ARDUINO_AVR_UNO) || defined(ESP8266))   // Using a soft serial port
+#include <SoftwareSerial.h>
+SoftwareSerial softSerial(/*rx =*/26, /*tx =*/25);
+#define FPSerial softSerial
+#else
+#define FPSerial Serial1
+#endif
 DFRobotDFPlayerMini myDFPlayer;
 
 void setup() {
+  #if (defined ESP32)
+  FPSerial.begin(9600, SERIAL_8N1, /*rx =*/26, /*tx =*/25);
+#else
+  FPSerial.begin(9600);
+#endif
   Serial.begin(115200);
   
   // mengatur esp ke mode station
@@ -38,10 +49,13 @@ void setup() {
   // mendaftarkan fungsi callback
   esp_now_register_recv_cb(cb_terima);
   data_ku.nilai = 3;
-    if (!myDFPlayer.begin(mySoftwareSerial)) {  //Use softwareSerial to communicate with mp3.
+    if (!myDFPlayer.begin(FPSerial, /*isACK = */true, /*doReset = */true)) {  //Use serial to communicate with mp3.
     Serial.println(F("Unable to begin:"));
     Serial.println(F("1.Please recheck the connection!"));
     Serial.println(F("2.Please insert the SD card!"));
+    while(true){
+      delay(0); // Code to compatible with ESP8266 watch dog.
+    }
   }
   myDFPlayer.play(3);
   myDFPlayer.volume(100);
