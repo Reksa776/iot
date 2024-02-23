@@ -1,72 +1,102 @@
-#include <esp_now.h>
-#include <WiFi.h>
-#include "DFRobotDFPlayerMini.h"
-#include <SoftwareSerial.h>
+#include <AntaresESPHTTP.h>    // Include the AntaresESP8266HTTP library
+#include <Arduino.h>
+#include <PubSubClient.h>
 
-// struktur data yang diterima
-typedef struct struct_message {
-    int nilai;
-} struct_message;
-struct_message data_ku;
+String mqttBroker = "broker.emqx.io";
+WiFiClient client;
+PubSubClient mqtt(client);
 
-// callback jika menerima data
-void cb_terima(const uint8_t *mac_addr, const uint8_t *dataDiterima, int panjang) {
-  memcpy(&data_ku, dataDiterima, sizeof(data_ku));
-  Serial.print("Bytes diterima: ");
-  Serial.println(panjang);
-  Serial.print("Int: ");
-  Serial.println(data_ku.nilai);
 
-  Serial.println();
-}
+#define ACCESSKEY "03fd039bd6554101:c3be4620d72ab8bb"    // Replace with your Antares account access key
+#define WIFISSID "Bandits of Bandwidth"      // Replace with your Wi-Fi SSID
+#define PASSWORD "qwerty123"  // Replace with your Wi-Fi password
 
-#if (defined(ARDUINO_AVR_UNO) || defined(ESP8266))   // Using a soft serial port
-#include <SoftwareSerial.h>
-SoftwareSerial softSerial(/*rx =*/26, /*tx =*/25);
-#define FPSerial softSerial
-#else
-#define FPSerial Serial1
-#endif
-DFRobotDFPlayerMini myDFPlayer;
+#define projectName "smartGateParking"     // Antares project name
+// #define deviceNameSensor "YOUR-DEVICE-NAME-1"   // Name of the device sending sensor data
+#define deviceNamePostman "sensorDIgital"  // Name of the device receiving data
 
+AntaresESPHTTP antares(ACCESSKEY);  // Initialize AntaresESP8266HTTP with the access key
+
+String testData;       // String to hold received data from Antares
+String lastData = "";  // String to store last received data
+
+
+void connect_mqtt();
 void setup() {
-  #if (defined ESP32)
-  FPSerial.begin(9600, SERIAL_8N1, /*rx =*/26, /*tx =*/25);
-#else
-  FPSerial.begin(9600);
-#endif
-  Serial.begin(115200);
-  
-  // mengatur esp ke mode station
-  WiFi.mode(WIFI_STA);
-
-  // inisialisasi espnow
-  if (esp_now_init() != ESP_OK) {
-    Serial.println("Gagal Inisialisasi espnow");
-    return;
-  }
-
-  // mendaftarkan fungsi callback
-  esp_now_register_recv_cb(cb_terima);
-  data_ku.nilai = 3;
-    if (!myDFPlayer.begin(FPSerial, /*isACK = */true, /*doReset = */true)) {  //Use serial to communicate with mp3.
-    Serial.println(F("Unable to begin:"));
-    Serial.println(F("1.Please recheck the connection!"));
-    Serial.println(F("2.Please insert the SD card!"));
-    while(true){
-      delay(0); // Code to compatible with ESP8266 watch dog.
-    }
-  }
-  myDFPlayer.play(3);
-  myDFPlayer.volume(100);
+  Serial.begin(115200);                        // Initialize serial communication
+  antares.setDebug(true);                      // Enable Antares library debug mode
+  antares.wifiConnection(WIFISSID, PASSWORD);  // Connect to WiFi using provided 
+  mqtt.setServer(mqttBroker.c_str(), 1883);
 }
- 
+
 void loop() {
-  if(data_ku.nilai == 1){
-    myDFPlayer.play(2);
-    data_ku.nilai = 3;
-  }else if (data_ku.nilai == 0){
-    myDFPlayer.play(1);
-    data_ku.nilai = 3;
-  }
+
+
+
+    antares.get(projectName, deviceNamePostman);  // Get data from Antares
+      testData = antares.getString("user");  // Get the "Test Data" field from the response
+
+    if (antares.getSuccess()) {                   // Check if data retrieval was successful
+
+      if (testData == "Agus")  // Check if the received data is different from the last one
+      {
+          if (!mqtt.connected())
+          {
+              connect_mqtt();
+              Serial.println("MQTT Connected");
+              mqtt.publish("smart/parking", "Agus Masuk Bu!!");
+          }
+          mqtt.loop();
+          mqtt.publish("smart/parking", "Agus Masuk Bu!!");
+          delay(5000);
+      
+      }else if (testData == "reksa")  // Check if the received data is different from the last one
+      {
+          if (!mqtt.connected())
+          {
+              connect_mqtt();
+              Serial.println("MQTT Connected");
+              mqtt.publish("smart/parking", "Reksa Masuk Bu!!");
+          }
+          mqtt.loop();
+          mqtt.publish("smart/parking", "Reksa Masuk Bu!!");
+          delay(5000);
+      
+      }else if (testData == "Algi")  // Check if the received data is different from the last one
+      {
+          if (!mqtt.connected())
+          {
+              connect_mqtt();
+              Serial.println("MQTT Connected");
+              mqtt.publish("smart/parking", "Algi Masuk Bu!!");
+          }
+          mqtt.loop();
+          mqtt.publish("smart/parking", "Algi Masuk Bu!!");
+          delay(5000);
+      
+      }else if(testData == "Unknow"){
+        if (!mqtt.connected())
+        {
+          connect_mqtt();
+          Serial.println("MQTT Connected");
+          mqtt.publish("smart/parking", "Ada Orang Yang Bukan Karyawan Yang Ingin Mencoba Masuk!!");
+        }
+        mqtt.loop();
+        mqtt.publish("smart/parking", "Ada Orang Yang Bukan Karyawan Yang Ingin Mencoba Masuk!!");
+        delay(5000);
+      }
+    }
+}
+
+
+void connect_mqtt()
+{
+    while (!mqtt.connected())
+    {
+        Serial.println("Connecting MQTT...");
+        if (mqtt.connect("esp32"))
+        {
+            mqtt.subscribe("smart/parking");
+        }
+    }
 }
