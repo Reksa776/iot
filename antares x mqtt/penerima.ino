@@ -44,10 +44,11 @@ void loop() {
           {
               connect_mqtt();
               Serial.println("MQTT Connected");
-              mqtt.publish("smart/parking", "Agus Masuk Bu!!");
+              mqtt.publish("smart/parking", "Mobil  Pak Agus Masuk Parkiran!");
+              return;
           }
           mqtt.loop();
-          mqtt.publish("smart/parking", "Agus Masuk Bu!!");
+          mqtt.publish("smart/parking", "Mobil Pak Agus Masuk Parkiran!");
           delay(4000);
       
       }else if (testData == "reksa")  // Check if the received data is different from the last one
@@ -56,10 +57,11 @@ void loop() {
           {
               connect_mqtt();
               Serial.println("MQTT Connected");
-              mqtt.publish("smart/parking", "Reksa Masuk Bu!!");
+              mqtt.publish("smart/parking", "Mobil Kak Reksa Masuk Parkiran!");
+              return;
           }
           mqtt.loop();
-          mqtt.publish("smart/parking", "Reksa Masuk Bu!!");
+          mqtt.publish("smart/parking", "Mobil Kak Reksa Masuk Parkiran!");
           delay(4000);
       
       }else if (testData == "Algi")  // Check if the received data is different from the last one
@@ -68,13 +70,24 @@ void loop() {
           {
               connect_mqtt();
               Serial.println("MQTT Connected");
-              mqtt.publish("smart/parking", "Algi Masuk Bu!!");
+              mqtt.publish("smart/parking", "Mobil Kak Algi Masuk Parkiran!");
+              return;
           }
           mqtt.loop();
-          mqtt.publish("smart/parking", "Algi Masuk Bu!!");
+          mqtt.publish("smart/parking", "Mobil Kak Algi Masuk Parkiran!");
           delay(4000);
       
-      }else{
+      }else if(testData == "Unknow"){
+          if (!mqtt.connected())
+          {
+              connect_mqtt();
+              Serial.println("MQTT Connected");
+              mqtt.publish("smart/parking", "Ada Orang Yang Bukan Karyawan Yang Ingin Mencoba Masuk!!");
+            return;
+          }
+          mqtt.loop();
+          mqtt.publish("smart/parking", "Ada Orang Yang Bukan Karyawan Yang Ingin Mencoba Masuk!!");
+          delay(4000);
         
       }
     }
